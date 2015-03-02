@@ -2,7 +2,8 @@
 Logstash various stuff
 
 ##scripts folder
-Scripts to collect multiline logs from specific folder and pass it to logstash local tcp input on port 5544.\n
+Scripts to collect multiline logs from specific folder and pass it to logstash local tcp input on port 5544.
+
 1. collects zip files
 2. upack certain files by pattern to zip's folder
 3. delete zip files
