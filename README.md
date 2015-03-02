@@ -12,7 +12,10 @@ Scripts to collect multiline logs from specific folder and pass it to logstash l
 6. delete log file
 
 
+
+
 !Important
+
 Please note all patterns are specifically created for my usage. For now, there is no plan to generalise this behaviour.
 
 
