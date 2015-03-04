@@ -10,7 +10,7 @@ logerr(){
 }
 
 hostname="localhost"
-deffiledb=".filesenddb"
+deffiledb="$HOME/.filesenddb"
 hostport="5544"
 initdirname="${1:-$(pwd)}"
 filedb="${2:-$deffiledb}"
@@ -64,8 +64,8 @@ do
 	# add servername and appname to each event
 	# then 
 	# send event and collect result
-	cat $fl \	
-	        | awk '/\[[0-9]+\/[0-9]+\/[0-9]+/{if (x)print x;x="";}{x=(!x)?$0:x"##!!NL!!##"$0;}END{print x;}'  \
+	cat $fl \
+		| awk '/\[[0-9]+\/[0-9]+\/[0-9]+/{if (x)print x;x="";}{x=(!x)?$0:x"##!!NL!!##"$0;}END{print x;}'  \
 		| awk -v servappname="$servername $appname " '{ print servappname $0 }' \
 		| nc $hostname $hostport; result=$?; 
 	#check result
