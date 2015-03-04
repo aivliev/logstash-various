@@ -10,8 +10,10 @@ logerr(){
 }
 
 hostname="localhost"
+deffiledb=".filesenddb"
 hostport="5544"
 initdirname="${1:-$(pwd)}"
+filedb="${2:-$deffiledb}"
 
 
 
@@ -43,25 +45,39 @@ echo "Sending files to $hostname:$hostport"
 i=0
 for fl in $files
 do
-	i=$((i+1));
+	i=$((i+1));	
+	fn=$(basename ${fl})
+	log  "($i/$total) \t calc hash of $fl\r"	
+	hash=`cat $fl | sha256sum | cut -c 1-64`		
+	if [ -f $filedb ]; then
+		if grep -Fq $fn $filedb | grep -Fq $hash $filedb; then
+			log "($i/$total) \tfound $fn with $hash in $filedb"
+			continue
+		fi
+	fi
+	
 	log  "($i/$total) \t start sending $fl\r"
 	servername=$(echo $fl | sed 's#.*/\([^/]*mcafwas[^/]*\).*#\1#')
-	appname=$(echo $fl | sed 's#.*/\([^/]*MCA_APP[^/-]*\).*#\1#')
-
-#	 Join next line if not started with date 		
-#	 then
-#	 add servername and appname to each event
-#	 then 
-#	 send event and collect result
-	cat $fl \
-		| awk '/\[[0-9]+\/[0-9]+\/[0-9]+/{if (x)print x;x="";}{x=(!x)?$0:x"##!!NL!!##"$0;}END{print x;}'  \
+        appname=$(echo $fl | sed 's#.*/\([^/]*MCA_APP[0-9]*\).*#\1#')
+	# Join next line if not started with date 		
+	# then
+	# add servername and appname to each event
+	# then 
+	# send event and collect result
+	cat $fl \	
+	        | awk '/\[[0-9]+\/[0-9]+\/[0-9]+/{if (x)print x;x="";}{x=(!x)?$0:x"##!!NL!!##"$0;}END{print x;}'  \
 		| awk -v servappname="$servername $appname " '{ print servappname $0 }' \
 		| nc $hostname $hostport; result=$?; 
 	#check result
+	
 	if [ $result -eq 0 ]; then 
-		#if success - delete file
-		log "($i/$total) \t $fl was sent successfully\r"
-		rm $fl
+		#if success
+		log "($i/$total) \t $fl was sent successfully\r"		
+		#put file/hash in db
+		echo "$fn $hash" >> $filedb
+		log "($i/$total) \t $fl put file info into DB\r"
+		#delete file
+		#rm $fl
 		log "($i/$total) \t $fl deleted\r"
 	else       
 		logerr "Something went wrong in sending file $fl, please check connection and try again\r"
